@@ -1,5 +1,8 @@
 library(caret)
 library(dslabs)
+library(magrittr)
+library(dplyr)
+library(purrr)
 data(heights)
 y<-heights$sex
 x<-heights$height
@@ -14,15 +17,22 @@ test_set<-heights[test_index, ]
 # factors are variables in R which take on a limited number of different values; 
 #   such variables are often refered to as categorical variables
 y_hat1<-sample(c("Male", "Female"), length(test_index), replace=TRUE) %>%
-    factor(y_hat1, levels=levels(test_set$sex))
+    factor(levels=levels(test_set$sex))
 heights %>% group_by(sex) %>% summarize(mean(height),sd(height))
 print(mean(y_hat1==test_set$sex))
 # algo2
 y_hat2<-ifelse(x>62,"Male","Female") %>% factor(levels=levels(test_set$sex))
-print(mean(y_hat1==test_set$sex))
+print(mean(y_hat2==test_set$sex))
 # optimization
 cutoff<-seq(61,70)
 accuracy<-map_dbl(cutoff, function(x){
     y_hat3<-ifelse(train_set$height>x, "Male", "Female") %>% factor(levels=levels(test_set$sex))
+    print(paste(as.character(x),as.character(mean(y_hat3==train_set$sex))))
     mean(y_hat3==train_set$sex)
 })
+print(max(accuracy))
+best_cutoff<-cutoff[which.max(accuracy)]
+y_hat<-ifelse(test_set$height>best_cutoff, "Male", "Female") %>%
+    factor(levels=levels(test_set$sex))
+y_hat<-factor(y_hat)
+print(mean(y_hat==test_set$sex))
